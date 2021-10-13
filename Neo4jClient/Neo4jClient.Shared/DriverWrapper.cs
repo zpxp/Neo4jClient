@@ -72,7 +72,7 @@ private class ListAddressResolver : IServerAddressResolver
             var authToken = GetAuthToken(username, pass, realm);
             this.driver = addressResolver == null
                 ? GraphDatabase.Driver(uri, authToken) 
-                : GraphDatabase.Driver(uri, authToken, new Config { Resolver = addressResolver });
+                : GraphDatabase.Driver(uri, authToken, new Config { Resolver = addressResolver, MaxTransactionRetryTime = TimeSpan.FromSeconds(30) });
         }
         
         public ISession Session()
