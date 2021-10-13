@@ -68,6 +68,7 @@ namespace Neo4jClient
                 ExecutionConfiguration.UseJsonStreaming = ExecutionConfiguration.UseJsonStreaming &&
                                                           RootApiResponse.Version >= new Version(1, 8);
 
+                    cypherCapabilities = CypherCapabilities.Cypher30;
                 if (RootApiResponse.Version < new Version(2, 0))
                     cypherCapabilities = CypherCapabilities.Cypher19;
 

@@ -452,11 +452,12 @@ namespace Neo4jClient
 
             using (var session = Driver.Session(AccessMode.Read))
             {
+               CypherCapabilities = CypherCapabilities.Cypher30;
                 var serverInformation = session.Run("CALL dbms.components()");
                 foreach (var record in serverInformation)
                 {
                     var name = record["name"].As<string>();
-                    if (name.ToLowerInvariant() != "neo4j kernel")
+                    if (name.ToLowerInvariant() != "ongdb kernel")
                         continue;
 
                     var version = record["versions"].As<List<object>>();
