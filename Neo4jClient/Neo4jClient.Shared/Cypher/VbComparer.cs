@@ -1,5 +1,5 @@
 ﻿using System.Linq.Expressions;
-using Microsoft.VisualBasic.CompilerServices;
+// using Microsoft.VisualBasic.CompilerServices;
 
 namespace Neo4jClient.Cypher
 {
@@ -21,10 +21,10 @@ namespace Neo4jClient.Cypher
 
             dynamic method = (MethodCallExpression) binaryExpression.Left;
 
-            if (!(method.Method.DeclaringType == typeof (Operators) && method.Method.Name == "CompareString"))
-            {
-                return base.Visit(node);
-            }
+            // if (!(method.Method.DeclaringType == typeof (Operators) && method.Method.Name == "CompareString"))
+            // {
+            //     return base.Visit(node);
+            // }
 
             dynamic left = method.Arguments[0];
             dynamic right = method.Arguments[1];
