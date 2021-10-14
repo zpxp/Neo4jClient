@@ -8,6 +8,7 @@ using Neo4j.Driver.V1;
 using Neo4jClient.Cypher;
 using Neo4jClient.Serialization;
 using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace Neo4jClient
 {
@@ -17,14 +18,14 @@ namespace Neo4jClient
         private const string DefaultTimeSpanFormat = @"d\.hh\:mm\:ss\.fffffff";
 
         
-        public static IStatementResult Run(this ISession session, CypherQuery query, IGraphClient gc)
+        public static Task<IStatementResultCursor> Run(this ISession session, CypherQuery query, IGraphClient gc)
         {
-            return session.Run(query.QueryText, query.ToNeo4jDriverParameters(gc));
+            return session.RunAsync(query.QueryText, query.ToNeo4jDriverParameters(gc));
         }
 
-        public static IStatementResult Run(this ITransaction session, CypherQuery query, IGraphClient gc)
+        public static Task<IStatementResultCursor> Run(this ITransaction session, CypherQuery query, IGraphClient gc)
         {
-            return session.Run(query.QueryText, query.ToNeo4jDriverParameters(gc));
+            return session.RunAsync(query.QueryText, query.ToNeo4jDriverParameters(gc));
         }
 
         // ReSharper disable once InconsistentNaming

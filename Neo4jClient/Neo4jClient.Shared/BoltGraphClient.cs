@@ -519,17 +519,17 @@ namespace Neo4jClient
                 if (InTransaction)
                 {
                     var result = await transactionManager.EnqueueCypherRequest($"The query was: {query.QueryText}", this, query).ConfigureAwait(false);
-                    results = ParseResults<TResult>(result.StatementResult, query);
+                    results = ParseResults<TResult>(result.StatementResult.ToList(), query);
                 }
                 else
                 {
                     using (var session = Driver.Session(query.IsWrite ? AccessMode.Write : AccessMode.Read, query.Bookmarks))
                     {
-                        var result = query.IsWrite 
-                            ? session.WriteTransaction(s => s.Run(query, this)) 
-                            : session.ReadTransaction(s => s.Run(query, this));
+                        var result = await (query.IsWrite 
+                            ? session.WriteTransactionAsync(async s => await s.Run(query, this)) 
+                            : session.ReadTransactionAsync(async s => await s.Run(query, this)));
 
-                        results = ParseResults<TResult>(result, query);
+                        results = ParseResults<TResult>(await result.ToListAsync(), query);
                         lastBookmark = session.LastBookmark;
                     }
                 }
@@ -550,7 +550,7 @@ namespace Neo4jClient
             return results;
         }
 
-        private List<TResult> ParseResults<TResult>(IStatementResult result, CypherQuery query)
+        private List<TResult> ParseResults<TResult>(IEnumerable<IRecord> result, CypherQuery query)
         {
             var deserializer = new CypherJsonDeserializer<TResult>(this, query.ResultMode, query.ResultFormat, false, true);
             var results = new List<TResult>();
@@ -608,7 +608,7 @@ namespace Neo4jClient
         }
 
         /// <inheritdoc />
-       Task IRawGraphClient.ExecuteCypherAsync(CypherQuery query)
+       async Task IRawGraphClient.ExecuteCypherAsync(CypherQuery query)
         {
            var tx = ExecutionContext.Begin(this);
 
@@ -616,7 +616,7 @@ namespace Neo4jClient
                 throw new InvalidOperationException("Can't execute cypher unless you have connected to the server.");
 
             if (InTransaction)
-                return transactionManager.EnqueueCypherRequest($"The query was: {query.QueryText}", this, query)
+                await transactionManager.EnqueueCypherRequest($"The query was: {query.QueryText}", this, query)
                     .ContinueWith(responseTask => OperationCompleted?.Invoke(this, new OperationCompletedEventArgs
                     {
                         QueryText = $"BOLT:{query.QueryText}"
@@ -625,16 +625,11 @@ namespace Neo4jClient
             using (var session = Driver.Session(query.IsWrite ? AccessMode.Write : AccessMode.Read, query.Bookmarks))
             {
                 if (query.IsWrite)
-                    session.WriteTransaction(s => s.Run(query, this));
+                    await session.WriteTransactionAsync(async s => await s.Run(query, this));
                 else
-                    session.ReadTransaction(s => s.Run(query, this));
+                    await session.ReadTransactionAsync(async s => await s.Run(query, this));
                 tx.Complete(query, session.LastBookmark);
             }
-#if NET45
-            return Task.FromResult(0);
-#else
-            return Task.CompletedTask;
-#endif
         }
 
         #endregion
